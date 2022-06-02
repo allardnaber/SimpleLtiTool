@@ -1,0 +1,10 @@
+{
+	"require": {
+		"imsglobal/lti": "*"
+	},
+	"autoload": {
+		"psr-4": {
+			"SimpleLti\\": "src/SimpleLti/"
+		}
+	}
+}
