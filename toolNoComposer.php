@@ -7,7 +7,7 @@ spl_autoload_register(function(string $fqcn) {
 	$parts = explode('\\', $fqcn);
 	
 	if (array_shift($parts) === 'IMSGlobal' && array_shift($parts) === 'LTI') {
-		$path = './imsglobal/lti/src/' . join('/', $parts) . '.php';
+		$path = './imsglobal/src/' . join('/', $parts) . '.php';
 		require $path;
 	}
 });

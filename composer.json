@@ -1,6 +1,6 @@
 {
 	"require": {
-		"imsglobal/lti": "*"
+		"oat-sa/imsglobal-lti": "*"
 	},
 	"autoload": {
 		"psr-4": {
