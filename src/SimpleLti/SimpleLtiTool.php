@@ -68,13 +68,18 @@ class SimpleLtiTool {
 	}
 
 	/**
-	 * Gets the username for the authenticated user. By default LTI does not 
-	 * contain this information. The current field name is specific for
-	 * Brightspace. Other LMSes will use other fields.
+	 * Gets the username for the authenticated user. By default LTI does not
+	 * contain this information. We try the most common fields for LMSs.
+	 * Source: https://developers.exlibrisgroup.com/leganto/integrations/lti/troubleshooting/user-problems/lms-username-parameter/
 	 * @return string|null The Brightspace username if defined, null otherwise.
 	 */
 	public function getUsername(): ?string {
-		return $this->toolProvider->getPostVar('ext_d2l_username');
+		return
+			$this->toolProvider->getPostVar('custom_lis_user_username') ?? // Canvas / Blackboard
+			$this->toolProvider->getPostVar('ext_d2l_username') ??         // Brightspace
+			$this->toolProvider->getPostVar('ext_user_username') ??        // Moodle
+			$this->toolProvider->getPostVar('ext_sakai_eid') ??            // Sakai
+			$this->toolProvider->getPostVar('lis_person_sourcedid');       // Sakai
 	}
 
 	/**
