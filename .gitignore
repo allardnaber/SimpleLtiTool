@@ -1,6 +1,7 @@
 .phpdoc
 .DS_Store
 composer.phar
+/.idea
 /vendor/
 /nbproject/
 /imsglobal/

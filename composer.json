@@ -1,4 +1,9 @@
 {
+	"name": "allardnaber/simpleltitool",
+	"description": "Basic LTI 1.1 launch handler",
+	"type": "library",
+	"minimum-stability": "stable",
+	"license": "MIT",
 	"require": {
 		"oat-sa/imsglobal-lti": "*"
 	},
