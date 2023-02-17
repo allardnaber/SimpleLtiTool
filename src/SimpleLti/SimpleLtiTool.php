@@ -126,7 +126,7 @@ class SimpleLtiTool {
 
 			public $postVars = [];
 
-			public function onLaunch(): true {
+			public function onLaunch(): bool {
 				$this->postVars = $_POST;
 				return true;
 			}
