@@ -60,7 +60,7 @@ class SimpleLtiTool {
 	/**
 	 * Gets the LTI user from the LTI request. The user id will be anonymized,
 	 * use getUserName to get the actual username from the LMS.
-	 * @see SimpleLtiTool::getUserName() The method to get the actual user name.
+	 * @see SimpleLtiTool::getUserName() The method to get the actual username.
 	 * @return \IMSGlobal\LTI\ToolProvider\User The LTI User that performed this request.
 	 */
 	public function getUser(): \IMSGlobal\LTI\ToolProvider\User {
@@ -68,7 +68,7 @@ class SimpleLtiTool {
 	}
 
 	/**
-	 * Gets the username for the authenticated user. By default LTI does not
+	 * Gets the username for the authenticated user. By default, LTI does not
 	 * contain this information. We try the most common fields for LMSs.
 	 * Source: https://developers.exlibrisgroup.com/leganto/integrations/lti/troubleshooting/user-problems/lms-username-parameter/
 	 * @return string|null The Brightspace username if defined, null otherwise.
@@ -83,6 +83,14 @@ class SimpleLtiTool {
 	}
 
 	/**
+	 * Gets the current locale for the user in http://www.rfc-editor.org/rfc/bcp/bcp47.txt format.
+	 * @return string|null The locale identifier if present, null otherwise.
+	 */
+	public function getLocale(): ?string {
+		return $this->toolProvider->getPostVar('launch_presentation_locale');
+	}
+
+	/**
 	 * Build the data connector used for the key/secret validation.
 	 * @param string $key The LTI key to use
 	 * @param string $secret The LTI secret to use.
@@ -91,13 +99,15 @@ class SimpleLtiTool {
 	private function getDataConnector(string $key, string $secret): DataConnector {
 		return new class($key, $secret) extends DataConnector {
 
+			private $key, $secret;
+
 			public function __construct($key, $secret) {
 				parent::__construct(null, '');
 				$this->key = $key;
 				$this->secret = $secret;
 			}
 
-			public function loadToolConsumer($consumer) {
+			public function loadToolConsumer($consumer): bool {
 				parent::loadToolConsumer($consumer);
 				$consumer->setKey($this->key);
 				$consumer->secret = $this->secret;
@@ -116,7 +126,7 @@ class SimpleLtiTool {
 
 			public $postVars = [];
 
-			public function onLaunch() {
+			public function onLaunch(): true {
 				$this->postVars = $_POST;
 				return true;
 			}
