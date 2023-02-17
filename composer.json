@@ -7,6 +7,9 @@
 	"require": {
 		"oat-sa/imsglobal-lti": "*"
 	},
+	"require-dev": {
+		"onspli/phpdoc-markdown": "*"
+	},
 	"autoload": {
 		"psr-4": {
 			"SimpleLti\\": "src/SimpleLti/"

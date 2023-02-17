@@ -10,18 +10,18 @@ use IMSGlobal\LTI\ToolProvider\ToolProvider;
  * data from that request.
  * 
  * It is currently based on LTI 1.1, which is officially deprecated, but will be
- * around for a few years. In the mean time we will try to work on an LTI 1.3
+ * around for a few years. In the meantime we will try to work on an LTI 1.3
  * version with the same signature.
- * 
- * In case the tool exits with error <strong>Array and string offset access
- * syntax with curly braces is deprecated</strong>, edit
- * <code>imsglobal/lti/src/OAuth/OAuthSignatureMethod.php</code>, line 59. Replace
- * the curly braces <code>{ }</code> with brackets <code>[ ]</code>.
  */
 class SimpleLtiTool {
 
 	private $toolProvider;
 
+	/**
+	 * Construct the tool launch verifier with specified secrets.
+	 * @param string $key LTI key as configured in the LMS.
+	 * @param string $secret LTI secret as configured in the LMS.
+	 */
 	public function __construct(string $key, string $secret) {
 		$dataConnector = $this->getDataConnector($key, $secret);
 		$this->toolProvider = $this->getToolProvider($dataConnector);
