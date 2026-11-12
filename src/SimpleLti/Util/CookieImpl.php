@@ -14,7 +14,7 @@ class CookieImpl implements ICookie {
 		setcookie($name, $value, [
 			'secure' => true,
 			'httponly' => true,
-			'samesite' => 'Lax',
+			'samesite' => 'None',
 			'expires' => $exp
 		]);
 	}
