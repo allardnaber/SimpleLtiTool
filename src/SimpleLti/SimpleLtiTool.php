@@ -160,7 +160,7 @@ class SimpleLtiTool {
 	 * @return string|null The Brightspace username if defined, null otherwise.
 	 */
 	public function getUsername(): ?string {
-		$body = $this->launchMessage->getAud();
+		$body = $this->launchMessage->getBody();
 		return
 			$body['http://www.brightspace.com']['username'] ??                         // Brightspace
 			$body['https://imsglobal.org']['username'] ??                              // Blackboard
