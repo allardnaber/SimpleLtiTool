@@ -6,3 +6,5 @@ composer.phar
 /nbproject/
 /imsglobal/
 /docs/
+/public/config.php
+.private.key

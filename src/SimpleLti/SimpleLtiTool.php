@@ -2,8 +2,13 @@
 
 namespace SimpleLti;
 
-use IMSGlobal\LTI\ToolProvider\DataConnector\DataConnector;
-use IMSGlobal\LTI\ToolProvider\ToolProvider;
+use Firebase\JWT\JWT;
+use Packback\Lti1p3\LtiOidcLogin;
+use RuntimeException;
+use SimpleLti\Util\CacheImpl;
+use SimpleLti\Util\CookieImpl;
+use SimpleLti\Util\DatabaseImpl;
+use SimpleLti\Util\Jwks;
 
 /**
  * This tool provides an easy method to verify an LTI request and retrieve
@@ -15,18 +20,67 @@ use IMSGlobal\LTI\ToolProvider\ToolProvider;
  */
 class SimpleLtiTool {
 
-	private $toolProvider;
+	private const DEFAULT_JWT_LEEWAY_SEC = 10;
+
+	private Jwks $jwks;
+	private $database, $cache, $cookie;
 
 	/**
 	 * Construct the tool launch verifier with specified secrets.
-	 * @param string $key LTI key as configured in the LMS.
-	 * @param string $secret LTI secret as configured in the LMS.
+	 * @param ?LtiConfig $config Required config. Null can be passed for missing config detection
 	 */
-	public function __construct(string $key, string $secret) {
-		$dataConnector = $this->getDataConnector($key, $secret);
-		$this->toolProvider = $this->getToolProvider($dataConnector);
-		$this->toolProvider->handleRequest();
+	public function __construct(private ?LtiConfig $config) {
+		if ($this->config === null) {
+			throw new RuntimeException('LTI Configuration is missing, please check the setup guide');
+		}
+
+		if (JWT::$leeway === 0) {
+			JWT::$leeway = self::DEFAULT_JWT_LEEWAY_SEC;
+		}
+		$this->ensureSession();
+		$this->jwks = new Jwks($this->config->kid, $this->config->privateKeyFile);
+		$this->database = new DatabaseImpl($this->config);
+		$this->cache = new CacheImpl();
+		$this->cookie = new CookieImpl();
 	}
+
+	/**
+	 * Gets the public key in an LTI 1.3 compliant JWKS array
+	 * @return array{keys: array{kty: string, alg:string, use: string, kid: string, n: string, e: string}}
+	 *     The JWKS array based on the current private key, {@see Jwks::getJwksDetails()}
+	 */
+	public function getJwks(): array {
+		return $this->jwks->getJwksDetails();
+	}
+
+	public function outputJwks(): void {
+		if (!headers_sent()) {
+			header('Content-Type: application/json');
+		}
+		echo json_encode($this->jwks->getJwksDetails());
+	}
+
+	public function oidcLogin(): never {
+		$login = new LtiOidcLogin($this->database, $this->cache, $this->cookie);
+		$redirectUrl = $login->getRedirectUrl($_POST['target_link_uri'] ?? '', $_POST);
+		if (!headers_sent()) {
+			http_response_code(302);
+			header('Location: ' . $redirectUrl);
+		} else {
+			printf('<a href="%s">Login to this service</a>', htmlentities($redirectUrl));
+		}
+		exit;
+	}
+
+	private function ensureSession(): void {
+		$status = session_status();
+		if ($status === PHP_SESSION_ACTIVE) {
+			throw new RuntimeException('Sessions are disabled, but are required for this tool to work.');
+		} elseif ($status === PHP_SESSION_NONE) {
+			session_start();
+		}
+	}
+
 
 	/**
 	 * Gets the course code from the LTI launch. It is not included in the
@@ -88,63 +142,6 @@ class SimpleLtiTool {
 	 */
 	public function getLocale(): ?string {
 		return $this->toolProvider->getPostVar('launch_presentation_locale');
-	}
-
-	/**
-	 * Build the data connector used for the key/secret validation.
-	 * @param string $key The LTI key to use
-	 * @param string $secret The LTI secret to use.
-	 * @return DataConnector The LTI signature validator.
-	 */
-	private function getDataConnector(string $key, string $secret): DataConnector {
-		return new class($key, $secret) extends DataConnector {
-
-			private $key, $secret;
-
-			public function __construct($key, $secret) {
-				parent::__construct(null, '');
-				$this->key = $key;
-				$this->secret = $secret;
-			}
-
-			public function loadToolConsumer($consumer): bool {
-				parent::loadToolConsumer($consumer);
-				$consumer->setKey($this->key);
-				$consumer->secret = $this->secret;
-				return true;
-			}
-		};
-	}
-
-	/**
-	 * Build the tool provider that takes care of processing the LTI message.
-	 * @param DataConnector $connector The LTI signature validator
-	 * @return ToolProvider The LTI tool provider with some extra methods.
-	 */
-	private function getToolProvider(DataConnector $connector): ToolProvider {
-		return new class($connector) extends ToolProvider {
-
-			public $postVars = [];
-
-			public function onLaunch(): bool {
-				$this->postVars = $_POST;
-				return true;
-			}
-
-			public function onError() {
-				throw new \Exception($this->message . ' ' . $this->reason);
-			}
-
-			/**
-			 * Get a variable that was sent along with the POST request.
-			 * @param string $key The name of the parameter.
-			 * @return string|null The value of the parameter, or null if undefined.
-			 */
-			public function getPostVar(string $key): ?string {
-				return $this->postVars[$key] ?? null;
-			}
-
-		};
 	}
 
 }

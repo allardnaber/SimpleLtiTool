@@ -1,0 +1,12 @@
+<?php
+
+require_once '../vendor/autoload.php';
+
+$GLOBALS['simpleLtiConfig'] = new \SimpleLti\LtiConfig(
+	'https://lms.example.com',                    // issuer
+	'63c0a993-bdb2-4172-a5cc-5aef876ddf59',       // client id
+	'3eb008da-933d-42cb-b270-c802e36710ab',       // deployment id
+	'https://lms.example.com/lti/authenticate',   // oidc login url
+	'https://lms.example.com/lti/token',          // token url
+	'https://lms.example.com/.well-known/jwks'    // jwks url
+);
