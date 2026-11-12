@@ -70,7 +70,7 @@ class Jwks implements JsonSerializable {
 				(error_get_last()['message'] ?? '(unknown error)'));
 		}
 		$output = null;
-		$result = @openssl_pkey_export($this->key, $output);
+		$result = @openssl_pkey_export($key, $output);
 		if ($result === false) {
 			throw new \RuntimeException(
 				'Unable to convert private key: ' .
