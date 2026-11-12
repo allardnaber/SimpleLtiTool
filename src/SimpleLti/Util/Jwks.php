@@ -76,7 +76,7 @@ class Jwks implements JsonSerializable {
 				'Unable to convert private key: ' .
 				(error_get_last()['message'] ?? '(unknown error)'));
 		}
-		return $result;
+		return $output;
 	}
 
 	private function savePrivateKeyToFile(): void {
