@@ -11,10 +11,11 @@ class CookieImpl implements ICookie {
 	}
 
 	public function setCookie(string $name, string $value, int $exp = 3600, array $options = []): void {
-		setcookie($name, $value, $exp, [
+		setcookie($name, $value, [
 			'secure' => true,
 			'httponly' => true,
-			'samesite' => 'Lax'
+			'samesite' => 'Lax',
+			'expires' => $exp
 		]);
 	}
 }
