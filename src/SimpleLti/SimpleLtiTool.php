@@ -80,14 +80,9 @@ class SimpleLtiTool {
 		exit;
 	}
 
-	public function ltiLaunch(): mixed {
+	public function ltiLaunch(): void {
 		$factory = new MessageFactory($this->database, $this->getServiceConnector(), $this->cache, $this->cookie);
-
-		$launch = $factory->create($_POST);
-
-		echo 'your unique user id is ' . $launch->getBody()['sub'];
-
-		return '';
+		$this->launchMessage = $factory->create($_POST);
 	}
 
 	private function ensureSession(): void {
