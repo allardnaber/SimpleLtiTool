@@ -17,7 +17,8 @@ switch ($_SERVER['REQUEST_METHOD']) {
 		break;
 
 	case 'POST':
-		break;
+		$tool->oidcLogin();
+		// break; // not required: oidcLogin terminates execution.
 
 	default:
 		error('Method not allowed');
