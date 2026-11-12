@@ -3,7 +3,11 @@
 namespace SimpleLti;
 
 use Firebase\JWT\JWT;
+use GuzzleHttp\Client;
+use Packback\Lti1p3\Factories\MessageFactory;
+use Packback\Lti1p3\LtiMessageLaunch;
 use Packback\Lti1p3\LtiOidcLogin;
+use Packback\Lti1p3\LtiServiceConnector;
 use RuntimeException;
 use SimpleLti\Util\CacheImpl;
 use SimpleLti\Util\CookieImpl;
@@ -72,6 +76,16 @@ class SimpleLtiTool {
 		exit;
 	}
 
+	public function ltiLaunch(): mixed {
+		$factory = new MessageFactory($this->database, $this->getServiceConnector(), $this->cache, $this->cookie);
+
+		$launch = $factory->create($_POST);
+
+		echo 'your unique user id is ' . $launch->getBody()['sub'];
+
+		return '';
+	}
+
 	private function ensureSession(): void {
 		$status = session_status();
 		if ($status === PHP_SESSION_ACTIVE) {
@@ -79,6 +93,10 @@ class SimpleLtiTool {
 		} elseif ($status === PHP_SESSION_NONE) {
 			session_start();
 		}
+	}
+
+	private function getServiceConnector(): LtiServiceConnector {
+		return new LtiServiceConnector($this->cache, new Client());
 	}
 
 

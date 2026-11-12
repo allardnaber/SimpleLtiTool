@@ -17,8 +17,13 @@ switch ($_SERVER['REQUEST_METHOD']) {
 		break;
 
 	case 'POST':
-		$tool->oidcLogin();
-		// break; // not required: oidcLogin terminates execution.
+		if (isset($_POST['login_hint'])) {
+			$tool->oidcLogin();
+			// break; // not required: oidcLogin terminates execution.
+		} elseif (isset($_POST['id_token'])) {
+			$tool->ltiLaunch();
+		}
+
 
 	default:
 		error('Method not allowed');
