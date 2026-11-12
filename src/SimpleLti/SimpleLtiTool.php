@@ -4,10 +4,12 @@ namespace SimpleLti;
 
 use Firebase\JWT\JWT;
 use GuzzleHttp\Client;
+use Packback\Lti1p3\Claims\Claim;
 use Packback\Lti1p3\Factories\MessageFactory;
 use Packback\Lti1p3\LtiMessageLaunch;
 use Packback\Lti1p3\LtiOidcLogin;
 use Packback\Lti1p3\LtiServiceConnector;
+use Packback\Lti1p3\Messages\LaunchMessage;
 use RuntimeException;
 use SimpleLti\Util\CacheImpl;
 use SimpleLti\Util\CookieImpl;
@@ -28,6 +30,8 @@ class SimpleLtiTool {
 
 	private Jwks $jwks;
 	private $database, $cache, $cookie;
+
+	private ?LaunchMessage $launchMessage = null;
 
 	/**
 	 * Construct the tool launch verifier with specified secrets.
@@ -107,15 +111,15 @@ class SimpleLtiTool {
 	 * @return string|null The Course Code if present, null otherwise.
 	 */
 	public function getCourseCode(): ?string {
-		return $this->toolProvider->getPostVar('context_label');
+		return $this->launchMessage->contextClaim()->label();
 	}
 	
 	/**
 	 * Gets the LTI context (= course) from the LTI request.
-	 * @return \IMSGlobal\LTI\ToolProvider\Context The Context.
+	 * @return Claim The Context claim
 	 */
-	public function getContext(): \IMSGlobal\LTI\ToolProvider\Context {
-		return $this->toolProvider->context;
+	public function getContext(): Claim {
+		return $this->launchMessage->contextClaim();
 	}
 	
 	/**
@@ -126,7 +130,7 @@ class SimpleLtiTool {
 	 *                                                  that initiated this request.
 	 */
 	public function getResourceLink(): \IMSGlobal\LTI\ToolProvider\ResourceLink {
-		return $this->toolProvider->resourceLink;
+		return $this->launchMessage->launchPresentationClaim()
 	}
 
 	/**
@@ -142,16 +146,32 @@ class SimpleLtiTool {
 	/**
 	 * Gets the username for the authenticated user. By default, LTI does not
 	 * contain this information. We try the most common fields for LMSs.
+	 * <ul>
+	 *     <li>Brightspace: enable sharing of username<br>
+	 * </li>
+	 * <li>Blackboard: custom parameter <tt>username=&#64;X&#64;user.id&#64;X&#64;</tt><br>
+	 *   https://help.anthology.com/evaluate/en/getting-started/authentication-information/blackboard-evaluate-lti-1-3-instructions.html</li>
+	 * <li>Canvas: custom parameter <tt>username=Canvas.user.loginId</tt><br>
+	 *   https://help.h5p.com/hc/en-us/articles/7508281268637-LTI-1-3-custom-email-feature and
+	 *   https://developerdocs.instructure.com/services/canvas/external-tools/lti/file.tools_variable_substitutions</li>
+	 * <li>Moodle: unsure how to set up<br>
+	 *   https://moodle.org/mod/forum/discuss.php?d=433965</li>
+	 * <li>Sakai: requires enabling 'Send User Names to External Tool'<br>
+	 *   According to Gemini
+	 *   </li>
+	 * </ul>
 	 * Source: https://developers.exlibrisgroup.com/leganto/integrations/lti/troubleshooting/user-problems/lms-username-parameter/
 	 * @return string|null The Brightspace username if defined, null otherwise.
 	 */
 	public function getUsername(): ?string {
+		$body = $this->launchMessage->getAud();
 		return
-			$this->toolProvider->getPostVar('custom_lis_user_username') ?? // Canvas / Blackboard
-			$this->toolProvider->getPostVar('ext_d2l_username') ??         // Brightspace
-			$this->toolProvider->getPostVar('ext_user_username') ??        // Moodle
-			$this->toolProvider->getPostVar('ext_sakai_eid') ??            // Sakai
-			$this->toolProvider->getPostVar('lis_person_sourcedid');       // Sakai
+			$body['http://www.brightspace.com']['username'] ??                         // Brightspace
+			$body['https://imsglobal.org']['username'] ??                              // Blackboard
+			$body['https://imsglobal.org']['person_sourcedid'] ??                      // Sakai
+			$body['https://purl.imsglobal.org/spec/lti/claim/custom']['username'] ??   // Canvas
+			$body['https://purl.imsglobal.org/spec/lti/claim/ext']['user_username'] ?? // Moodle
+			null;
 	}
 
 	/**
@@ -159,7 +179,7 @@ class SimpleLtiTool {
 	 * @return string|null The locale identifier if present, null otherwise.
 	 */
 	public function getLocale(): ?string {
-		return $this->toolProvider->getPostVar('launch_presentation_locale');
+		return $this->launchMessage->launchPresentationClaim()->getBody()['locale'] ?? null;
 	}
 
 }

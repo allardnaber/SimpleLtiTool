@@ -22,6 +22,8 @@ switch ($_SERVER['REQUEST_METHOD']) {
 			// break; // not required: oidcLogin terminates execution.
 		} elseif (isset($_POST['id_token'])) {
 			$tool->ltiLaunch();
+			echo 'username: ' . ($tool->getUsername() ?? ' (unknown)');
+			echo '  locale ' . ($tool->getLocale() ?? ' (unknown)') . PHP_EOL;
 		}
 
 
