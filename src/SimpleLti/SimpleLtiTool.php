@@ -129,9 +129,10 @@ class SimpleLtiTool {
 	 * @return \IMSGlobal\LTI\ToolProvider\ResourceLink The LTI Resource Link
 	 *                                                  that initiated this request.
 	 */
-	public function getResourceLink(): \IMSGlobal\LTI\ToolProvider\ResourceLink {
-		return $this->launchMessage->launchPresentationClaim()
-	}
+	//public function getResourceLink(): \IMSGlobal\LTI\ToolProvider\ResourceLink {
+		//return $this->launchMessage->launchPresentationClaim()
+
+	//}
 
 	/**
 	 * Gets the LTI user from the LTI request. The user id will be anonymized,
